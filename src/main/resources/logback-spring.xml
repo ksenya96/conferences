@@ -34,7 +34,7 @@
         <appender-ref ref="RollingFile"/>        
     </logger>
 
-    <logger name="com.conf.conferences.LogFilter">
+    <logger name="com.conf.conferences.log.LogFilter">
         <level value="DEBUG"/>
     </logger>
 

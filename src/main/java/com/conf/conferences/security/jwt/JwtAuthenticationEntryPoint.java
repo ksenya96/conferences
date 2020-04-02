@@ -1,5 +1,7 @@
 package com.conf.conferences.security.jwt;
 
+import com.conf.conferences.ErrorModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 
 @Component
@@ -18,7 +21,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
 
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        OutputStream out = response.getOutputStream();
+        ObjectMapper mapper = new ObjectMapper();
+        ErrorModel errorModel = new ErrorModel("Unauthorized");
+        mapper.writeValue(out, errorModel);
+        out.flush();
     }
 }
 
