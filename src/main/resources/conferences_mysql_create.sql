@@ -159,6 +159,14 @@ CREATE TABLE `oauth2_user` (
 	PRIMARY KEY (`user_id`)
 );
 
+CREATE TABLE `invalid_token` (
+	`token_id` int(10) NOT NULL AUTO_INCREMENT,
+	`token` VARCHAR(1000) NOT NULL,
+	`expiration_time` DATETIME NOT NULL,
+	CONSTRAINT invalid_token_pk
+		PRIMARY KEY (`token_id`)
+);
+
 ALTER TABLE `area_event_ref` ADD CONSTRAINT `area_event_ref_fk0` FOREIGN KEY (`area_id`) REFERENCES `area`(`area_id`);
 
 ALTER TABLE `area_event_ref` ADD CONSTRAINT `area_event_ref_fk1` FOREIGN KEY (`event_id`) REFERENCES `event`(`event_id`);

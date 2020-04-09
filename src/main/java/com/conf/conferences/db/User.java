@@ -1,7 +1,6 @@
 package com.conf.conferences.db;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -17,8 +16,7 @@ import java.util.Collection;
 
 @Entity
 @Table(name = "user", schema = "confs")
-@Setter
-@Getter
+@Data
 public class User implements UserDetails {
     private static final long serialVersionUID = 4568268391086657330L;
 

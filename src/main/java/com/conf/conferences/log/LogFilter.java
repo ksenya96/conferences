@@ -1,9 +1,7 @@
 package com.conf.conferences.log;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -103,7 +101,7 @@ public class LogFilter extends OncePerRequestFilter {
         String jsonLogRequest = "";
         try {
             jsonLogRequest = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.warn("Cannot write object as JSON" + e);
         }
         return jsonLogRequest;
@@ -112,7 +110,7 @@ public class LogFilter extends OncePerRequestFilter {
     private Object fromJsonToObject(String json) {
         try {
             return objectMapper.readValue(json, Object.class);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             log.warn("Cannot read JSON to object" + e);
             return null;
         }

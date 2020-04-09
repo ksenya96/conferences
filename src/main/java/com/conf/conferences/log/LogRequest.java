@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.springframework.http.HttpHeaders;
 
 @Getter
+@Setter
 @Builder
 public class LogRequest {
     private String method;

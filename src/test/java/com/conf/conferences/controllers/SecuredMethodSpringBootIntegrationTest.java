@@ -54,4 +54,14 @@ public class SecuredMethodSpringBootIntegrationTest {
         mvc.perform(get("/hello"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @WithMockUser("spring")
+    public void logout() throws Exception {
+        mvc.perform(get("/logout"))
+                .andExpect(status().isOk());
+
+        mvc.perform(get("/hello"))
+                .andExpect(status().isUnauthorized());
+    }
 }

@@ -41,10 +41,16 @@ public class ApiListScanner implements ApiListingScannerPlugin {
     @Override
     public List<ApiDescription> apply(DocumentationContext documentationContext) {
         return Arrays.asList(
-                getApiDescription("/login/google", "Google authentication"),
-                getApiDescription("/login/github", "Github authentication"),
-                getApiDescription("/login/facebook", "Facebook authentication"),
-                getApiDescription("/login/linkedin", "Linkedin authentication")
+                getApiDescription("/login/google", "Google authentication",
+                        responseMessages(), "oauth2-authentication"),
+                getApiDescription("/login/github", "Github authentication",
+                        responseMessages(), "oauth2-authentication"),
+                getApiDescription("/login/facebook", "Facebook authentication",
+                        responseMessages(), "oauth2-authentication"),
+                getApiDescription("/login/linkedin", "Linkedin authentication",
+                        responseMessages(), "oauth2-authentication"),
+                getApiDescription("/logout", "Logout",
+                        Collections.emptySet(), "authentication-controller")
         );
     }
 
@@ -53,15 +59,16 @@ public class ApiListScanner implements ApiListingScannerPlugin {
         return DocumentationType.SWAGGER_2.equals(documentationType);
     }
 
-    private ApiDescription getApiDescription(String path, String description) {
+    private ApiDescription getApiDescription(String path, String description,
+                                             Set<ResponseMessage> responseMessages, String tag) {
         return new ApiDescriptionBuilder(new Defaults().operationOrdering())
                 .description(description)
                 .path(path)
                 .operations(Collections.singletonList(new OperationBuilder(operationNames)
                         .method(HttpMethod.GET)
                         .summary(description)
-                        .responseMessages(responseMessages())
-                        .tags(Collections.singleton("oauth2-authentication"))
+                        .responseMessages(responseMessages)
+                        .tags(Collections.singleton(tag))
                         .build()))
                 .build();
     }

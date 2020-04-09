@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Builder
+@Setter
+@Getter
 public class LogResponse {
     private String method;
     private String uri;

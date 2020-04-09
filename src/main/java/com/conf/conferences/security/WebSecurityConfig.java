@@ -2,6 +2,7 @@ package com.conf.conferences.security;
 
 import com.conf.conferences.security.jwt.JwtAuthenticationEntryPoint;
 import com.conf.conferences.security.jwt.JwtRequestFilter;
+import com.conf.conferences.security.logout.CommonLogoutSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
@@ -53,7 +54,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     @Qualifier("oauth2ClientContext")
-    OAuth2ClientContext oauth2ClientContext;
+    private OAuth2ClientContext oauth2ClientContext;
+
+    @Autowired
+    private CommonLogoutSuccessHandler commonLogoutSuccessHandler;
 
     @Bean
     public FilterRegistrationBean<OAuth2ClientContextFilter> oauth2ClientFilterRegistration(
@@ -165,6 +169,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         // We don't need CSRF for this example
         httpSecurity.csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).enableSessionUrlRewriting(false)
+                .and()
                 // dont authenticate this particular request
                 .authorizeRequests().antMatchers("/authenticate").permitAll()
                 .antMatchers("/login/google").permitAll()
@@ -177,10 +183,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                         anyRequest().authenticated().and().
                 // make sure we use stateless session; session won't be used to
                 // store user's state.
-                        exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and()
-                .sessionManagement()
-                .enableSessionUrlRewriting(true)
-                .sessionCreationPolicy(SessionCreationPolicy.NEVER);
+                        exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
+
+                .and()
+                .logout().logoutUrl("/logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+                .logoutSuccessHandler(commonLogoutSuccessHandler);
 
         // Add a filter to validate the tokens with every request
         httpSecurity.addFilterBefore(oauth2ClientFilter(), UsernamePasswordAuthenticationFilter.class)

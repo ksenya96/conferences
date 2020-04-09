@@ -1,8 +1,11 @@
 package com.conf.conferences.security.jwt;
 
+import com.conf.conferences.security.logout.InvalidToken;
+import com.conf.conferences.security.logout.InvalidTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -11,6 +14,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 @Component
@@ -22,6 +26,13 @@ public class JwtTokenUtil implements Serializable {
 
     @Value("${jwt.secret}")
     private String secret;
+
+    private InvalidTokenRepository invalidTokenRepository;
+
+    @Autowired
+    public void setInvalidTokenRepository(InvalidTokenRepository invalidTokenRepository) {
+        this.invalidTokenRepository = invalidTokenRepository;
+    }
 
     //retrieve username from jwt token
     public String getUsernameFromToken(String token) {
@@ -69,6 +80,7 @@ public class JwtTokenUtil implements Serializable {
     //validate token
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        final InvalidToken invalidToken = invalidTokenRepository.getByToken(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token)) && Objects.isNull(invalidToken);
     }
 }
