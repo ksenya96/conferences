@@ -1,10 +1,13 @@
 package com.conf.conferences.controllers;
 
 import com.conf.conferences.ErrorModel;
+import com.conf.conferences.db.User;
+import com.conf.conferences.db.UserDto;
+import com.conf.conferences.db.UserService;
+import com.conf.conferences.exceptions.UserAlreadyExistsException;
 import com.conf.conferences.security.jwt.JwtRequest;
 import com.conf.conferences.security.jwt.JwtResponse;
 import com.conf.conferences.security.jwt.JwtTokenUtil;
-import com.conf.conferences.db.UserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -13,21 +16,30 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import javax.validation.Valid;
+import java.util.Optional;
 
 import static com.conf.conferences.ApiConstants.BAD_REQUEST_CODE;
 import static com.conf.conferences.ApiConstants.BAD_REQUEST_MESSAGE;
+import static com.conf.conferences.ApiConstants.CREATED_CODE;
+import static com.conf.conferences.ApiConstants.CREATED_MESSAGE;
 import static com.conf.conferences.ApiConstants.INTERNAL_SERVER_ERROR_CODE;
 import static com.conf.conferences.ApiConstants.INTERNAL_SERVER_ERROR_MESSAGE;
 import static com.conf.conferences.ApiConstants.OK_CODE;
 import static com.conf.conferences.ApiConstants.OK_MESSAGE;
+import static com.conf.conferences.ApiConstants.UNAUTHORIZED_CODE;
+import static com.conf.conferences.ApiConstants.UNAUTHORIZED_MESSAGE;
 
 
 @RestController(value = "AuthenticationController")
@@ -39,6 +51,8 @@ public class AuthenticationController {
     private JwtTokenUtil jwtTokenUtil;
 
     private UserService userDetailsService;
+
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public void setAuthenticationManager(AuthenticationManager authenticationManager) {
@@ -55,6 +69,11 @@ public class AuthenticationController {
         this.userDetailsService = userDetailsService;
     }
 
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     //Для OAuth2 /login/google
     @ApiOperation(value = "Authentication with login and password",
             response = JwtResponse.class,
@@ -62,30 +81,51 @@ public class AuthenticationController {
     @ApiResponses(value = {
             @ApiResponse(code = OK_CODE, message = OK_MESSAGE, response = JwtResponse.class),
             @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorModel.class),
+            @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorModel.class),
             @ApiResponse(code = INTERNAL_SERVER_ERROR_CODE, message = INTERNAL_SERVER_ERROR_MESSAGE, response = ErrorModel.class)
     })
-    @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+    @PostMapping(value = "/authenticate")
     public ResponseEntity<JwtResponse> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) {
 
-        try {
-            authenticate(authenticationRequest.getUsername(), authenticationRequest.getPassword());
+        final UserDetails userDetails = Optional.ofNullable(
+                userDetailsService.loadUserByUsername(authenticationRequest.getEmail())
+        ).orElseThrow(() -> new UsernameNotFoundException("User not found with login: " + authenticationRequest.getEmail()));
 
-            final UserDetails userDetails = userDetailsService
-                    .loadUserByUsername(authenticationRequest.getUsername());
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                authenticationRequest.getEmail(), authenticationRequest.getPassword()));
 
-            final String token = jwtTokenUtil.generateToken(userDetails);
+        final String token = jwtTokenUtil.generateToken(userDetails);
 
-            return ResponseEntity.ok(new JwtResponse(token));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return ResponseEntity.ok(new JwtResponse(token));
+
     }
 
-    private void authenticate(String username, String password) throws Exception {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-        } catch (BadCredentialsException e) {
-            throw new Exception("INVALID_CREDENTIALS", e);
+    @ApiOperation(value = "User registration",
+            notes = "without authorities")
+    @ApiResponses(value = {
+            @ApiResponse(code = CREATED_CODE, message = CREATED_MESSAGE),
+            @ApiResponse(code = BAD_REQUEST_CODE, message = BAD_REQUEST_MESSAGE, response = ErrorModel.class),
+            @ApiResponse(code = UNAUTHORIZED_CODE, message = UNAUTHORIZED_MESSAGE, response = ErrorModel.class),
+            @ApiResponse(code = INTERNAL_SERVER_ERROR_CODE, message = INTERNAL_SERVER_ERROR_MESSAGE, response = ErrorModel.class)
+    })
+    @ResponseStatus(value = HttpStatus.CREATED)
+    @PostMapping(value = "/register")
+    public ResponseEntity<?> register(@Valid @RequestBody UserDto userDto) {
+        if (userDetailsService.loadUserByUsername(userDto.getEmail()) != null) {
+            throw new UserAlreadyExistsException();
         }
+        User user = new User();
+        user.setUsername(userDto.getEmail());
+        user.setEmail(userDto.getEmail());
+        user.setName(userDto.getUsername());
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        user.setEnabled(true);
+        userDetailsService.saveAndFlush(user);
+
+        return ResponseEntity.created(
+                ServletUriComponentsBuilder.fromCurrentRequestUri()
+                        .replacePath("/authenticate")
+                        .build().toUri())
+                .build();
     }
 }

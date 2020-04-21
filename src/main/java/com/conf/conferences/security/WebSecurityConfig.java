@@ -173,6 +173,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 // dont authenticate this particular request
                 .authorizeRequests().antMatchers("/authenticate").permitAll()
+                .antMatchers("/register").permitAll()
                 .antMatchers("/login/google").permitAll()
                 .antMatchers("/login/github").permitAll()
                 .antMatchers("/login/facebook").permitAll()

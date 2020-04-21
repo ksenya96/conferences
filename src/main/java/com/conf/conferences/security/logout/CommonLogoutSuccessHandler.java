@@ -7,12 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.ZoneId;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -49,7 +51,8 @@ public class CommonLogoutSuccessHandler implements LogoutSuccessHandler {
                 String username = jwtTokenUtil.getUsernameFromToken(jwtToken);
 
                 if (username != null) {
-                    UserDetails userDetails = this.userService.loadUserByUsername(username);
+                    UserDetails userDetails = Optional.ofNullable(this.userService.loadUserByUsername(username))
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
                     if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
                         InvalidToken invalidToken = new InvalidToken();

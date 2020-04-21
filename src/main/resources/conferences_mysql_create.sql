@@ -125,14 +125,15 @@ CREATE TABLE `speaker` (
 
 CREATE TABLE `user` (
 	`user_id` INT(10) NOT NULL AUTO_INCREMENT,
-	`name` varchar(255) NOT NULL,
-	`email` varchar(255) NOT NULL,
+	`name` varchar(255),
+	`email` varchar(255) UNIQUE,
 	`phone` varchar(255),
 	`address` varchar(1000),
 	`role_name` varchar(1000),
 	`password` varchar(100),
 	`username` varchar(255) NOT NULL,
 	`oauth2_resource` ENUM('GOOGLE', 'FACEBOOK', 'TWITTER', 'LINKEDIN', 'GITHUB'),
+	`is_enabled` BOOLEAN DEFAULT FALSE NOT NULL,
 	PRIMARY KEY (`user_id`)
 );
 

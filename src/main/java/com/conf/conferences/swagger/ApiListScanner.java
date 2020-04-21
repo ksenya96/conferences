@@ -1,5 +1,6 @@
 package com.conf.conferences.swagger;
 
+import io.swagger.models.RefModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,8 @@ import static com.conf.conferences.ApiConstants.INTERNAL_SERVER_ERROR_CODE;
 import static com.conf.conferences.ApiConstants.INTERNAL_SERVER_ERROR_MESSAGE;
 import static com.conf.conferences.ApiConstants.OK_CODE;
 import static com.conf.conferences.ApiConstants.OK_MESSAGE;
+import static com.conf.conferences.ApiConstants.UNAUTHORIZED_CODE;
+import static com.conf.conferences.ApiConstants.UNAUTHORIZED_MESSAGE;
 
 @Component
 public class ApiListScanner implements ApiListingScannerPlugin {
@@ -41,16 +44,16 @@ public class ApiListScanner implements ApiListingScannerPlugin {
     @Override
     public List<ApiDescription> apply(DocumentationContext documentationContext) {
         return Arrays.asList(
-                getApiDescription("/login/google", "Google authentication",
-                        responseMessages(), "oauth2-authentication"),
-                getApiDescription("/login/github", "Github authentication",
-                        responseMessages(), "oauth2-authentication"),
-                getApiDescription("/login/facebook", "Facebook authentication",
-                        responseMessages(), "oauth2-authentication"),
-                getApiDescription("/login/linkedin", "Linkedin authentication",
-                        responseMessages(), "oauth2-authentication"),
+                getApiDescription("/login/google", "Google registration and authentication",
+                        responseMessages(new ModelRef("JwtResponse")), "oauth2-authentication"),
+                getApiDescription("/login/github", "Github registration and authentication",
+                        responseMessages(new ModelRef("JwtResponse")), "oauth2-authentication"),
+                getApiDescription("/login/facebook", "Facebook registration and authentication",
+                        responseMessages(new ModelRef("JwtResponse")), "oauth2-authentication"),
+                getApiDescription("/login/linkedin", "Linkedin registration and authentication",
+                        responseMessages(new ModelRef("JwtResponse")), "oauth2-authentication"),
                 getApiDescription("/logout", "Logout",
-                        Collections.emptySet(), "authentication-controller")
+                        responseMessages(null), "authentication-controller")
         );
     }
 
@@ -73,16 +76,21 @@ public class ApiListScanner implements ApiListingScannerPlugin {
                 .build();
     }
 
-    private Set<ResponseMessage> responseMessages() { //<8>
+    private Set<ResponseMessage> responseMessages(ModelRef okResponseModel) { //<8>
         Set<ResponseMessage> responseMessages = new HashSet<>();
         responseMessages.add(new ResponseMessageBuilder()
                 .code(OK_CODE)
                 .message(OK_MESSAGE)
-                .responseModel(new ModelRef("JwtResponse"))
+                .responseModel(okResponseModel)
                 .build());
         responseMessages.add(new ResponseMessageBuilder()
                 .code(BAD_REQUEST_CODE)
                 .message(BAD_REQUEST_MESSAGE)
+                .responseModel(new ModelRef("ErrorModel"))
+                .build());
+        responseMessages.add(new ResponseMessageBuilder()
+                .code(UNAUTHORIZED_CODE)
+                .message(UNAUTHORIZED_MESSAGE)
                 .responseModel(new ModelRef("ErrorModel"))
                 .build());
         responseMessages.add(new ResponseMessageBuilder()

@@ -33,6 +33,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "oauth2_resource")
     private SocialType oauth2Resource;
+    private boolean isEnabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -54,8 +55,4 @@ public class User implements UserDetails {
         return true;
     }
 
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
 }

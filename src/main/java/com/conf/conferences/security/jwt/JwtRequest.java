@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 @NoArgsConstructor
@@ -15,6 +16,8 @@ public class JwtRequest implements Serializable {
 
     private static final long serialVersionUID = -770335567709653456L;
 
-    private String username;
+    @NotBlank(message = "Login cannot be empty")
+    private String email;
+    @NotBlank(message = "Password cannot be empty")
     private String password;
 }

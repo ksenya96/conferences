@@ -46,10 +46,7 @@ class UserServiceTest {
     @Test
     void loadUserByUsername_Fail() {
         saveUserWithPassword();
-        UsernameNotFoundException exception = Assert.assertThrows(UsernameNotFoundException.class, () ->
-                userService.loadUserByUsername("formago"));
-
-        Assert.assertEquals("User not found with username: formago", exception.getMessage());
+        Assert.assertNull(userService.loadUserByUsername("formago"));
     }
 
     @Test
@@ -63,19 +60,13 @@ class UserServiceTest {
     @Test
     void loadUserByUsernameAndOauth2Resource_InvalidResource() {
         saveOauth2User();
-        UsernameNotFoundException exception = Assert.assertThrows(UsernameNotFoundException.class, () ->
-                userService.loadUserByUsernameAndOauth2Resource("test", SocialType.FACEBOOK));
-
-        Assert.assertEquals("User not found with username: test from resource: FACEBOOK", exception.getMessage());
+        Assert.assertNull(userService.loadUserByUsernameAndOauth2Resource("test", SocialType.FACEBOOK));
     }
 
     @Test
     void loadUserByUsernameAndOauth2Resource_InvalidUsername() {
         saveOauth2User();
-        UsernameNotFoundException exception = Assert.assertThrows(UsernameNotFoundException.class, () ->
-                userService.loadUserByUsernameAndOauth2Resource("formago", SocialType.GITHUB));
-
-        Assert.assertEquals("User not found with username: formago from resource: GITHUB", exception.getMessage());
+        Assert.assertNull(userService.loadUserByUsernameAndOauth2Resource("formago", SocialType.GITHUB));
     }
 
     private void saveUserWithPassword() {

@@ -23,7 +23,8 @@ public class SpringFoxConfig {
                 .paths(PathSelectors.any())
                 .build()
                 .tags(new Tag("oauth2-authentication", "Oauth2 authentication"))
-                .apiInfo(apiInfo());
+                .apiInfo(apiInfo())
+                .useDefaultResponseMessages(false);
     }
 
     private ApiInfo apiInfo() {
